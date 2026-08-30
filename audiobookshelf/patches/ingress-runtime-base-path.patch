@@ -1,14 +1,15 @@
 diff --git a/client/nuxt.config.js b/client/nuxt.config.js
-index 7219c78..b2fe9b3 100644
+index 7219c78..a529a01 100644
 --- a/client/nuxt.config.js
 +++ b/client/nuxt.config.js
-@@ -1,4 +1,5 @@
+@@ -1,4 +1,6 @@
  const pkg = require('./package.json')
 +const webpack = require('webpack')
++const path = require('path')
  
  const routerBasePath = process.env.ROUTER_BASE_PATH ?? '/audiobookshelf'
  const serverHostUrl = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3333'
-@@ -11,14 +12,18 @@ module.exports = {
+@@ -11,14 +13,37 @@ module.exports = {
    target: 'static',
    dev: process.env.NODE_ENV !== 'production',
    env: {
@@ -17,6 +18,25 @@ index 7219c78..b2fe9b3 100644
    },
    telemetry: false,
  
++  // The assignment above is not the only place the base path has to arrive
++  // early. Nuxt reads it into the webpack public path from its own client
++  // entry, which is too late for anything whose address is built the moment
++  // its module is evaluated, and that is every font and image. Prepending a
++  // module to the entry gets there first.
++  //
++  // This has to hang off the hook rather than off "build.extend", because Nuxt
++  // assigns the client entry after it calls extend, replacing whatever was
++  // there.
++  hooks: {
++    'webpack:config'(configs) {
++      const client = configs.find((config) => config.name === 'client')
++      if (!client || !Array.isArray(client.entry?.app)) {
++        throw new Error('Could not find the Nuxt client entry to prepend the Ingress public path module to')
++      }
++      client.entry.app.unshift(path.resolve(__dirname, 'public-path.js'))
++    }
++  },
++
    publicRuntimeConfig: {
      version: pkg.version,
 -    routerBasePath
@@ -29,7 +49,7 @@ index 7219c78..b2fe9b3 100644
    },
  
    // Global page headers: https://go.nuxtjs.dev/config-head
-@@ -104,16 +109,36 @@ module.exports = {
+@@ -104,16 +129,36 @@ module.exports = {
          }
        ]
      },
@@ -73,3 +93,26 @@ index 7219c78..b2fe9b3 100644
    watchers: {
      webpack: {
        aggregateTimeout: 300,
+diff --git a/client/public-path.js b/client/public-path.js
+new file mode 100644
+index 0000000..0c1f1f5
+--- /dev/null
++++ b/client/public-path.js
+@@ -0,0 +1,17 @@
++// Home Assistant Ingress serves Audiobookshelf from a path that is only settled
++// per request, and NGINX writes that path into the page for the client to read
++// back out of the Nuxt runtime configuration.
++//
++// Nuxt makes this same assignment in its own client entry, but does it in that
++// module's body, which runs only after everything the entry imports has already
++// been evaluated. Every font and image webpack turns into "publicPath + name"
++// resolves its address at exactly that moment, so by then all of them have been
++// handed the path this was built with and go asking Home Assistant's site root
++// for it. Running ahead of that entry is early enough for all of them.
++if (typeof window !== 'undefined') {
++  const app = ((window.__NUXT__ || {}).config || {})._app
++  if (app && app.assetsPath) {
++    // eslint-disable-next-line no-undef
++    __webpack_public_path__ = (app.cdnURL || '') + app.assetsPath
++  }
++}
