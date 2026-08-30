@@ -1,0 +1,17 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Audiobookshelf
+# Prepares the data directories
+# ==============================================================================
+
+# The database and the server's own settings live in the first of these. The
+# second holds everything Audiobookshelf derives from a library: the cached
+# covers and author images, the transcoded audio it streams from, and its own
+# backups.
+#
+# Libraries themselves are not here. Those are folders you point Audiobookshelf
+# at from inside it, under /media or /share.
+mkdir -p \
+    /data/config \
+    /data/metadata

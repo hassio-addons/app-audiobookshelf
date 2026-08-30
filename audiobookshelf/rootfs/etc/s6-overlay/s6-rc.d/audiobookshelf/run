@@ -1,0 +1,37 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Audiobookshelf
+# Runs the Audiobookshelf server
+# ==============================================================================
+
+export CONFIG_PATH="/data/config"
+export METADATA_PATH="/data/metadata"
+
+# Only ever listen on loopback; NGINX is what faces Ingress and the network.
+export HOST="127.0.0.1"
+export PORT="49000"
+
+# What Audiobookshelf reports about itself, and what its update check compares
+# against. This is a container, however it got here.
+export SOURCE="docker"
+
+# Audiobookshelf serves its client from a base path that is fixed when the
+# client is built, and Ingress only settles on one per request. So the client
+# is built for the site root and NGINX writes the Ingress path into the page
+# instead. The server never sees that path either way: Ingress strips it before
+# the request arrives here.
+export ROUTER_BASE_PATH=""
+
+# Left to itself, Audiobookshelf downloads ffmpeg, ffprobe and the nunicode
+# SQLite extension from the internet on startup whenever it cannot find them.
+# All three are in the image, so it is told where they are and the check that
+# would go looking is skipped.
+export FFMPEG_PATH="/usr/bin/ffmpeg"
+export FFPROBE_PATH="/usr/bin/ffprobe"
+export NUSQLITE3_PATH="/usr/local/lib/nusqlite3/libnusqlite3.so"
+export SKIP_BINARIES_CHECK="1"
+
+bashio::log.info 'Starting Audiobookshelf...'
+
+exec node /opt/audiobookshelf/index.js

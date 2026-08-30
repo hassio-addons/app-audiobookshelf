@@ -1,0 +1,75 @@
+diff --git a/client/nuxt.config.js b/client/nuxt.config.js
+index 7219c78..b2fe9b3 100644
+--- a/client/nuxt.config.js
++++ b/client/nuxt.config.js
+@@ -1,4 +1,5 @@
+ const pkg = require('./package.json')
++const webpack = require('webpack')
+ 
+ const routerBasePath = process.env.ROUTER_BASE_PATH ?? '/audiobookshelf'
+ const serverHostUrl = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3333'
+@@ -11,14 +12,18 @@ module.exports = {
+   target: 'static',
+   dev: process.env.NODE_ENV !== 'production',
+   env: {
+-    serverUrl: serverHostUrl + routerBasePath,
+     chromecastReceiver: 'FD1F76C5'
+   },
+   telemetry: false,
+ 
+   publicRuntimeConfig: {
+     version: pkg.version,
+-    routerBasePath
++    routerBasePath,
++    // Read back by @nuxtjs/axios in preference to the value compiled into
++    // the bundle, which is what lets the base path be decided per request.
++    axios: {
++      baseURL: routerBasePath
++    }
+   },
+ 
+   // Global page headers: https://go.nuxtjs.dev/config-head
+@@ -104,16 +109,36 @@ module.exports = {
+         }
+       ]
+     },
+-    workbox: {
+-      offline: false,
+-      cacheAssets: false,
+-      preCaching: [],
+-      runtimeCaching: []
+-    }
++    // Home Assistant hands out an Ingress path that changes, so a service
++    // worker registered under one is orphaned as soon as it does, and the
++    // registration itself is for an address outside the app's own reach.
++    // Nothing is given up by dropping it: offline support and asset caching
++    // were both already off.
++    workbox: false
+   },
+ 
+   // Build Configuration: https://go.nuxtjs.dev/config-build
+-  build: {},
++  build: {
++    // "process.env.serverUrl" is a compile time substitution, so every
++    // download link, audio source and OIDC callback built from it would
++    // carry whatever base path this was built with. Those are addresses the
++    // browser resolves by itself, out of reach of any interceptor, and under
++    // Home Assistant Ingress the base path is only known per request.
++    //
++    // Pointing the substitution at the runtime config instead keeps this to
++    // a single change rather than a patch against every call site, and
++    // carries along call sites added upstream later.
++    extend(config, { isClient, isDev }) {
++      if (!isClient) return
++      config.plugins.push(
++        new webpack.DefinePlugin({
++          'process.env.serverUrl': isDev
++            ? JSON.stringify(serverHostUrl + routerBasePath)
++            : 'window.__NUXT__.config.routerBasePath'
++        })
++      )
++    }
++  },
+   watchers: {
+     webpack: {
+       aggregateTimeout: 300,
