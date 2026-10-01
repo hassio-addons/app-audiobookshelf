@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:21.0.6
+ARG BUILD_FROM=ghcr.io/hassio-addons/base:21.0.7
 ARG AUDIOBOOKSHELF_VERSION="2.37.1"
 ARG NUSQLITE3_VERSION="1.2"
 
