@@ -98,7 +98,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Audiobookshelf itself only ever listens on loopback.
 RUN \
     apk add --no-cache \
-        ffmpeg=8.1.2-r0 \
+        ffmpeg=8.1.3-r0 \
         nginx=1.30.6-r0 \
         nodejs=24.22.1-r0 \
     \
