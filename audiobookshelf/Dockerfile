@@ -69,7 +69,7 @@ WORKDIR /usr/src/audiobookshelf
 RUN \
     apk add --no-cache \
         build-base=0.5-r4 \
-        nodejs=24.22.1-r0 \
+        nodejs=24.18.1-r0 \
         npm=11.12.1-r0 \
         python3=3.14.8-r0 \
         unzip=6.0-r16 \
@@ -100,7 +100,7 @@ RUN \
     apk add --no-cache \
         ffmpeg=8.1.2-r0 \
         nginx=1.30.6-r0 \
-        nodejs=24.22.1-r0 \
+        nodejs=24.18.1-r0 \
     \
     && rm -f -r \
         /etc/nginx \
