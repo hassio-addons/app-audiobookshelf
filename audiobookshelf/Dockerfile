@@ -1,5 +1,5 @@
 ARG BUILD_FROM=ghcr.io/hassio-addons/base:21.0.11
-ARG AUDIOBOOKSHELF_VERSION="2.37.2"
+ARG AUDIOBOOKSHELF_VERSION="2.38.0"
 ARG NUSQLITE3_VERSION="1.2"
 
 # The web client is a Nuxt application that is generated up front and then
