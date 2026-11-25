@@ -99,7 +99,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN \
     apk add --no-cache \
         ffmpeg=8.1.3-r0 \
-        nginx=1.30.7-r0 \
+        nginx=1.30.8-r0 \
         nodejs=24.22.3-r0 \
     \
     && rm -f -r \
